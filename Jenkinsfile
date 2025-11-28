@@ -17,8 +17,9 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'sudo cp target/*.war /var/lib/tomcat9/webapps/'
-                sh 'sudo systemctl restart tomcat9'
+                sh 'sudo cp target/*.war /opt/tomcat9/webapps/'
+                sh 'sudo /opt/tomcat9/bin/shutdown.sh || true9'
+                sh 'sudo /opt/tomcat9/bin/startup.sh'
             }
         }
     }
