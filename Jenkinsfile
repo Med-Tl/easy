@@ -14,7 +14,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/marwaiset/e-commerce.git'
+                git 'https://github.com/Med-Tl/easy.git'
             }
         }
 
