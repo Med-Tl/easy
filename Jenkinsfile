@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        // SonarQube token
+        SONAR_TOKEN = 'squ_76703779ae838a7b4fa51ee5dd5e5c5e5c75040d'
+        SONAR_HOST_URL = 'http://localhost:9000'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -15,13 +21,27 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+            }
+        }
+
         stage('Deploy') {
             steps {
                 sh 'sudo cp target/*.war /opt/tomcat9/webapps/'
-                sh '/opt/tomcat9/bin/shutdown.sh || true9'
+                sh '/opt/tomcat9/bin/shutdown.sh || true'
                 sh '/opt/tomcat9/bin/startup.sh'
             }
         }
     }
-}
 
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs for details.'
+        }
+    }
+}
