@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        SONARQUBE_SERVER = 'sonarqube'
-    }
-
     tools {
         maven 'Maven'
         jdk 'Java17'
@@ -14,48 +10,55 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/Med-Tl/easy.git'
+                // Clone your Git repository
+                git 'https://github.com/marwaisctc.commerss.git'
             }
         }
 
         stage('Build & Test') {
             steps {
+                // Build project and run unit tests
                 sh 'mvn clean test'
-            }
-        }
-
-        stage('SAST - SonarQube') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh 'mvn sonar:sonar'
-                }
             }
         }
 
         stage('Package') {
             steps {
+                // Package into WAR
                 sh 'mvn package'
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Tomcat') {
             steps {
+                // Deploy WAR to Tomcat running on port 8081
                 sh '''
-                  nohup java -jar target/*.jar &
+                sudo cp target/*.war /var/lib/tomcat9/webapps/ecommerce.war
+                sudo systemctl restart tomcat9
+                sleep 10
                 '''
+            }
+        }
+
+        stage('Check Application') {
+            steps {
+                // Verify app is running
+                sh 'curl -f http://192.168.142.130:8081/ecommerce'
             }
         }
 
         stage('DAST - OWASP ZAP') {
             steps {
-                sh 'zap-baseline.py -t http://localhost:8081 || true'
+                // Run ZAP baseline scan
+                sh 'zap-baseline.py -t http://192.168.142.130:8081/ecommerce || true'
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+            // Archive the WAR artifact
+            archiveArtifacts artifacts: '**/target/*.war', allowEmptyArchive: false
         }
     }
 }
