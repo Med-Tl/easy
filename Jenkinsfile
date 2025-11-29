@@ -5,6 +5,11 @@ pipeline {
         SONAR_HOST_URL = 'http://localhost:9000'
     }
 
+    tools {
+        maven 'Maven' // This must match the name you set in Jenkins Global Tool Configuration
+        jdk 'Java21'  // Optional: if you have a JDK configured in Jenkins
+    }
+
     stages {
         stage('Checkout') {
             steps {
