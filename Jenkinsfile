@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        // SonarQube token
-        SONAR_TOKEN = 'squ_76703779ae838a7b4fa51ee5dd5e5c5e5c75040d'
+        // SonarQube token from Jenkins credentials
+        SONAR_TOKEN = credentials('test')   // Use credential ID 'test'
         SONAR_HOST_URL = 'http://localhost:9000'
     }
 
@@ -41,7 +41,7 @@ pipeline {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check logs for details.'
+            echo 'Pipeline failed. Check logs!'
         }
     }
 }
