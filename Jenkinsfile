@@ -7,14 +7,14 @@ pipeline {
     }
 
     environment {
-        SONAR_HOST = 'http://192.168.142.130:9000'
-        APP_URL = 'http://192.168.142.130:8081/ecommerce'
+        // If needed, you can also store ZAP_HOME or other env vars here
     }
 
     stages {
 
         stage('Checkout') {
             steps {
+                // Clone your Git repository
                 git 'https://github.com/Med-Tl/easy.git'
             }
         }
@@ -27,15 +27,17 @@ pipeline {
 
         stage('SAST - SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=ecommerce -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN"
+                // Use your configured SonarQube server
+                withSonarQubeEnv('sonarqube') {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=ecommerce"
                 }
             }
         }
 
         stage('Sonar Quality Gate') {
             steps {
-                timeout(time: 2, unit: 'MINUTES') {
+                // Wait for the quality gate result; fail pipeline if gate fails
+                timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
@@ -49,6 +51,7 @@ pipeline {
 
         stage('Deploy to Tomcat') {
             steps {
+                // Deploy WAR to Tomcat on port 8081
                 sh '''
                 sudo cp target/*.war /var/lib/tomcat9/webapps/ecommerce.war
                 sudo systemctl restart tomcat9
@@ -59,13 +62,13 @@ pipeline {
 
         stage('Check Application') {
             steps {
-                sh "curl -f $APP_URL"
+                sh 'curl -f http://192.168.142.130:8081/ecommerce'
             }
         }
 
         stage('DAST - OWASP ZAP') {
             steps {
-                sh "zap-baseline.py -t $APP_URL || true"
+                sh 'zap-baseline.py -t http://192.168.142.130:8081/ecommerce || true'
             }
         }
     }
