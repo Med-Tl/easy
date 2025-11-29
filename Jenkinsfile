@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Clone your Git repository
-                git 'https://github.com/marwaisctc.commerss.git'
+                git 'https://github.com/Med-Tl/easy.git'
             }
         }
 
