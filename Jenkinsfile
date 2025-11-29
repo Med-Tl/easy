@@ -6,10 +6,6 @@ pipeline {
         jdk 'Java17'
     }
 
-    environment {
-        // If needed, you can also store ZAP_HOME or other env vars here
-    }
-
     stages {
 
         stage('Checkout') {
