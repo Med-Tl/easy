@@ -1,24 +1,61 @@
-@@ -1,23 +1 @@
 pipeline {
     agent any
 
+    environment {
+        SONARQUBE_SERVER = 'sonarqube'
+    }
+
+    tools {
+        maven 'Maven'
+        jdk 'Java17'
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
-                git 'https://github.com/Med-Tl/easy.git'
+                git 'https://github.com/marwaiset/e-commerce.git'
             }
         }
 
-        stage('Build') {
+        stage('Build & Test') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean test'
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('SAST - SonarQube') {
             steps {
-                sh 'cp target/*.war /opt/tomcat/webapps/'
+                withSonarQubeEnv('sonarqube') {
+                    sh 'mvn sonar:sonar'
+                }
             }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                  nohup java -jar target/*.jar &
+                '''
+            }
+        }
+
+        stage('DAST - OWASP ZAP') {
+            steps {
+                sh 'zap-baseline.py -t http://localhost:8081 || true'
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
         }
     }
 }
