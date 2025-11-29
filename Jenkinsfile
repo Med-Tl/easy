@@ -6,32 +6,49 @@ pipeline {
         jdk 'Java17'
     }
 
+    environment {
+        SONAR_HOST = 'http://192.168.142.130:9000'
+        APP_URL = 'http://192.168.142.130:8081/ecommerce'
+    }
+
     stages {
 
         stage('Checkout') {
             steps {
-                // Clone your Git repository
                 git 'https://github.com/Med-Tl/easy.git'
             }
         }
 
         stage('Build & Test') {
             steps {
-                // Build project and run unit tests
                 sh 'mvn clean test'
+            }
+        }
+
+        stage('SAST - SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=ecommerce -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN"
+                }
+            }
+        }
+
+        stage('Sonar Quality Gate') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
 
         stage('Package') {
             steps {
-                // Package into WAR
                 sh 'mvn package'
             }
         }
 
         stage('Deploy to Tomcat') {
             steps {
-                // Deploy WAR to Tomcat running on port 8081
                 sh '''
                 sudo cp target/*.war /var/lib/tomcat9/webapps/ecommerce.war
                 sudo systemctl restart tomcat9
@@ -42,22 +59,19 @@ pipeline {
 
         stage('Check Application') {
             steps {
-                // Verify app is running
-                sh 'curl -f http://192.168.142.130:8081/ecommerce'
+                sh "curl -f $APP_URL"
             }
         }
 
         stage('DAST - OWASP ZAP') {
             steps {
-                // Run ZAP baseline scan
-                sh 'zap-baseline.py -t http://192.168.142.130:8081/ecommerce || true'
+                sh "zap-baseline.py -t $APP_URL || true"
             }
         }
     }
 
     post {
         always {
-            // Archive the WAR artifact
             archiveArtifacts artifacts: '**/target/*.war', allowEmptyArchive: false
         }
     }
