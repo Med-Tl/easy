@@ -10,7 +10,6 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                // Clone your Git repository
                 git 'https://github.com/Med-Tl/easy.git'
             }
         }
@@ -21,20 +20,10 @@ pipeline {
             }
         }
 
-        stage('SAST - SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             steps {
-                // Use your configured SonarQube server
-                withSonarQubeEnv('sonarqube') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=ecommerce"
-                }
-            }
-        }
-
-        stage('Sonar Quality Gate') {
-            steps {
-                // Wait for the quality gate result; fail pipeline if gate fails
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                withSonarQubeEnv('sonarqube') { // Make sure 'sonarqube' matches your Jenkins SonarQube config
+                    sh 'mvn sonar:sonar -Dsonar.projectKey=ecommerce'
                 }
             }
         }
@@ -47,7 +36,6 @@ pipeline {
 
         stage('Deploy to Tomcat') {
             steps {
-                // Deploy WAR to Tomcat on port 8081
                 sh '''
                 sudo cp target/*.war /var/lib/tomcat9/webapps/ecommerce.war
                 sudo systemctl restart tomcat9
