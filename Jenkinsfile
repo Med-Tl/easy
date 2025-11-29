@@ -2,13 +2,10 @@ pipeline {
     agent any
 
     environment {
-        // SonarQube token from Jenkins credentials
-        SONAR_TOKEN = credentials('test')   // Use credential ID 'test'
         SONAR_HOST_URL = 'http://localhost:9000'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git 'https://github.com/Med-Tl/easy.git'
@@ -23,7 +20,9 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+                withCredentials([string(credentialsId: 'sonar', variable: 'SONAR_TOKEN')]) {
+                    sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+                }
             }
         }
 
@@ -41,7 +40,7 @@ pipeline {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check logs!'
+            echo 'Pipeline failed!'
         }
     }
 }
