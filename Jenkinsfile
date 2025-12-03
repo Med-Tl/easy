@@ -9,23 +9,29 @@ pipeline {
     stages {
 
         stage('Checkout') {
-            steps { git 'https://github.com/Med-Tl/easy.git' }
+            steps {
+                git 'https://github.com/Med-Tl/easy.git'
+            }
         }
 
         stage('Build & Test') {
-            steps { sh 'mvn clean test' }
+            steps {
+                sh 'mvn clean test'
+            }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube') {
+                withSonarQubeEnv('sonarqube') { 
                     sh 'mvn sonar:sonar -Dsonar.projectKey=ecommerce'
                 }
             }
         }
 
         stage('Package') {
-            steps { sh 'mvn package' }
+            steps {
+                sh 'mvn package'
+            }
         }
 
         stage('Deploy to Tomcat') {
@@ -39,7 +45,9 @@ pipeline {
         }
 
         stage('Check Application') {
-            steps { sh 'curl -f http://192.168.142.130:8081/ecommerce' }
+            steps {
+                sh 'curl -f http://192.168.142.130:8081/ecommerce'
+            }
         }
 
         stage('DAST - OWASP ZAP') {
@@ -47,11 +55,11 @@ pipeline {
                 script {
                     def workspace = pwd()
                     sh """
-                        docker run --rm -v ${workspace}:/zap/wrk \
-                            ghcr.io/zaproxy/zaproxy:stable \
-                            zap-baseline.py \
-                            -t http://192.168.142.130:8081/ecommerce \
-                            -r /zap/wrk/zap_report.html || true
+                    docker run --rm -u 128:128 -v ${workspace}:/zap/wrk \
+                        ghcr.io/zaproxy/zaproxy:stable \
+                        zap-baseline.py \
+                        -t http://192.168.142.130:8081/ecommerce \
+                        -r /zap/wrk/zap_report.html
                     """
                 }
             }
@@ -60,8 +68,12 @@ pipeline {
 
     post {
         always {
+            // Save WAR file
             archiveArtifacts artifacts: '**/target/*.war', allowEmptyArchive: false
+
+            // Save OWASP ZAP HTML report
             archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
         }
     }
 }
+
