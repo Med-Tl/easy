@@ -53,10 +53,11 @@ pipeline {
         stage('DAST - OWASP ZAP') {
             steps {
                 sh '''
-                    zap-baseline.py \
+                    docker run --rm -v $(pwd):/zap/wrk \
+                        ghcr.io/zaproxy/zaproxy:stable \
+                        zap-baseline.py \
                         -t http://192.168.142.130:8081/ecommerce \
-                        -r zap_report.html \
-                        || true
+                        -r zap_report.html || true
                 '''
             }
         }
@@ -64,12 +65,8 @@ pipeline {
 
     post {
         always {
-            // Save WAR file
             archiveArtifacts artifacts: '**/target/*.war', allowEmptyArchive: false
-
-            // Save OWASP ZAP HTML report
             archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
         }
     }
 }
-
