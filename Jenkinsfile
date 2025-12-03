@@ -1,4 +1,4 @@
-pipeline {
+kpipeline {
     agent any
 
     tools {
@@ -22,7 +22,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube') { // Make sure 'sonarqube' matches your Jenkins SonarQube config
+                withSonarQubeEnv('sonarqube') {
                     sh 'mvn sonar:sonar -Dsonar.projectKey=ecommerce'
                 }
             }
@@ -37,9 +37,9 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 sh '''
-                sudo cp target/*.war /var/lib/tomcat9/webapps/ecommerce.war
-                sudo systemctl restart tomcat9
-                sleep 10
+                    sudo cp target/*.war /var/lib/tomcat9/webapps/ecommerce.war
+                    sudo systemctl restart tomcat9
+                    sleep 10
                 '''
             }
         }
@@ -52,14 +52,24 @@ pipeline {
 
         stage('DAST - OWASP ZAP') {
             steps {
-                sh 'zap-baseline.py -t http://192.168.142.130:8081/ecommerce || true'
+                sh '''
+                    zap-baseline.py \
+                        -t http://192.168.142.130:8081/ecommerce \
+                        -r zap_report.html \
+                        || true
+                '''
             }
         }
     }
 
     post {
         always {
+            // Save WAR file
             archiveArtifacts artifacts: '**/target/*.war', allowEmptyArchive: false
+
+            // Save OWASP ZAP HTML report
+            archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
         }
     }
 }
+
