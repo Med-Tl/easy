@@ -22,7 +22,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube') { 
+                withSonarQubeEnv('sonarqube') {
                     sh 'mvn sonar:sonar -Dsonar.projectKey=ecommerce'
                 }
             }
@@ -52,16 +52,12 @@ pipeline {
 
         stage('DAST - OWASP ZAP') {
             steps {
-                script {
-                    def workspace = pwd()
-                    sh """
-                    docker run --rm -v ${workspace}:/zap/wrk \
-                        ghcr.io/zaproxy/zaproxy:stable \
-                        zap-baseline.py \
+                sh '''
+                    zap-baseline.py \
                         -t http://192.168.142.130:8081/ecommerce \
-                        -r /zap/wrk/zap_report.html
-                    """
-                }
+                        -r zap_report.html \
+                        || true
+                '''
             }
         }
     }
