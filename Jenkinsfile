@@ -55,7 +55,7 @@ pipeline {
                 script {
                     def workspace = pwd()
                     sh """
-                    docker run --rm -u 128:128 -v ${workspace}:/zap/wrk \
+                    docker run --rm -v ${workspace}:/zap/wrk \
                         ghcr.io/zaproxy/zaproxy:stable \
                         zap-baseline.py \
                         -t http://192.168.142.130:8081/ecommerce \
@@ -76,4 +76,3 @@ pipeline {
         }
     }
 }
-
