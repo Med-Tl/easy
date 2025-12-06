@@ -93,8 +93,8 @@ sudo apt install -y git docker.io openjdk-17-jdk maven tomcat9
 ### 2️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git
-cd YOUR-REPO
+git clone https://github.com/Med-Tl/easy.git
+cd easy
 ```
 
 ---
